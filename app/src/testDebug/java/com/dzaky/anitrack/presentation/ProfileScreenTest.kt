@@ -1,6 +1,7 @@
 package com.dzaky.anitrack.presentation
 
 import android.app.Application
+import android.os.Looper
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.lifecycle.viewModelScope
 import androidx.room.Room
@@ -27,6 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -44,7 +46,11 @@ class ProfileScreenTest {
         val profiles = ProfileRepository(PreferenceDataStoreFactory.create(scope = scope) { file })
         viewModel = ProfileViewModel(profiles, LibraryRepository(database.favorites(), database.watchlist(), database.history()))
         compose.setContent { AniTrackTheme { ProfileScreen(viewModel) } }
-        compose.waitUntil(timeoutMillis = 5_000) { !viewModel.state.value.isLoading }
+        compose.waitUntil(timeoutMillis = 5_000) {
+            // Room/DataStore resume on Android's main looper, which Robolectric pauses.
+            shadowOf(Looper.getMainLooper()).idle()
+            !viewModel.state.value.isLoading
+        }
     }
 
     @After fun close() {
@@ -58,7 +64,10 @@ class ProfileScreenTest {
         compose.onNodeWithText("Name").performTextReplacement("Dzaky Putra")
         compose.onNodeWithText("Username").performTextReplacement("DZAKY")
         compose.onNodeWithText("Save").performClick()
-        compose.waitUntil(timeoutMillis = 5_000) { viewModel.state.value.profile?.username == "dzaky" && AnimeBadge.PendatangBaru in viewModel.state.value.earned }
+        compose.waitUntil(timeoutMillis = 5_000) {
+            shadowOf(Looper.getMainLooper()).idle()
+            viewModel.state.value.profile?.username == "dzaky" && AnimeBadge.PendatangBaru in viewModel.state.value.earned
+        }
         compose.onNodeWithText("@dzaky").assertExists()
         compose.onNodeWithText("Edit profile").assertExists()
     }
