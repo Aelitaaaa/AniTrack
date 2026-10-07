@@ -12,9 +12,8 @@ class RequestGate @Inject constructor() {
     private val mutex = Mutex()
     private var lastStartNanos = 0L
 
-    suspend fun awaitTurn() = mutex.withLock {
-        // Spacing all catalog requests also stays below Jikan's per-minute quota.
-        val interval = TimeUnit.MILLISECONDS.toNanos(1_100)
+    suspend fun awaitTurn(intervalMillis: Long = 1_100) = mutex.withLock {
+        val interval = TimeUnit.MILLISECONDS.toNanos(intervalMillis)
         val remaining = interval - (System.nanoTime() - lastStartNanos)
         if (remaining > 0) delay(TimeUnit.NANOSECONDS.toMillis(remaining) + 1)
         lastStartNanos = System.nanoTime()

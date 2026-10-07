@@ -99,7 +99,10 @@ class SearchViewModel @Inject constructor(
             _state.value = SearchUiState.Idle
         }
     }
-    fun retry() { retryCount.value += 1 }
+    fun retry() {
+        animeRepository.retryConnection()
+        retryCount.value += 1
+    }
 
     fun loadMore() {
         val current = _state.value as? SearchUiState.Results ?: return

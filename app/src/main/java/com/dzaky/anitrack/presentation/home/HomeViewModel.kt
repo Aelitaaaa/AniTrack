@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class DiscoveryRow(val section: DiscoverySection, val content: LoadState<List<Anime>> = LoadState.Loading)
+data class DiscoveryRow(val section: DiscoverySection, val content: LoadState<List<Anime>> = LoadState.Loading, val isOffline: Boolean = false)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -40,6 +40,7 @@ class HomeViewModel @Inject constructor(
     fun refresh(force: Boolean = true) {
         if (refreshJob?.isActive == true) return
         refreshJob = viewModelScope.launch {
+            if (force) animeRepository.retryConnection()
             _refreshing.value = true
             try {
                 DiscoverySection.entries.forEach { load(it, force) }
@@ -51,23 +52,24 @@ class HomeViewModel @Inject constructor(
 
     fun retry(section: DiscoverySection) {
         viewModelScope.launch {
+            animeRepository.retryConnection()
             setSection(section, LoadState.Loading)
             load(section, force = true)
         }
     }
 
     private suspend fun load(section: DiscoverySection, force: Boolean) {
-        val result = try {
-            LoadState.Ready(animeRepository.discovery(section, force))
+        try {
+            val result = animeRepository.discovery(section, force)
+            setSection(section, LoadState.Ready(result.anime), result.isOffline)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            LoadState.Failed(error.catalogMessage())
+            setSection(section, LoadState.Failed(error.catalogMessage()))
         }
-        setSection(section, result)
     }
 
-    private fun setSection(section: DiscoverySection, state: LoadState<List<Anime>>) {
-        _sections.update { rows -> rows.map { if (it.section == section) it.copy(content = state) else it } }
+    private fun setSection(section: DiscoverySection, state: LoadState<List<Anime>>, isOffline: Boolean = false) {
+        _sections.update { rows -> rows.map { if (it.section == section) it.copy(content = state, isOffline = isOffline) else it } }
     }
 }

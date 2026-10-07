@@ -53,7 +53,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("About AniTrack", style = MaterialTheme.typography.titleLarge)
                 Text("A place for the anime you find, love, and watch.", style = MaterialTheme.typography.bodyLarge)
-                Text("Anime information is provided by Jikan, an unofficial MyAnimeList API. Favorites and watch progress are stored on your device.",
+                Text("Anime information is provided by Jikan / MyAnimeList and AniList. Your profile, badges, favorites, and watch progress are stored on this device.",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

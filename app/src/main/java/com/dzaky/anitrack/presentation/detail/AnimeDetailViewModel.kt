@@ -49,6 +49,7 @@ class AnimeDetailViewModel @Inject constructor(
     init { load() }
 
     fun load(refresh: Boolean = false) {
+        if (refresh) animeRepository.retryConnection()
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
             _state.value = LoadState.Loading
@@ -66,7 +67,10 @@ class AnimeDetailViewModel @Inject constructor(
         }
     }
 
-    fun retryCharacters() { viewModelScope.launch { loadCharacters() } }
+    fun retryCharacters() {
+        animeRepository.retryConnection()
+        viewModelScope.launch { loadCharacters() }
+    }
 
     private suspend fun loadCharacters() {
         _characters.value = LoadState.Loading

@@ -85,7 +85,7 @@ fun AnimeDetailScreen(viewModel: AnimeDetailViewModel, onAnimeClick: (Int) -> Un
                 item(key = "characters") { CharactersSection(characters, viewModel::retryCharacters) }
                 if (anime.relations.isNotEmpty()) item(key = "related") { RelatedSection(anime.relations, onAnimeClick) }
                 item(key = "source") {
-                    Text("Information from MyAnimeList via Jikan", style = MaterialTheme.typography.labelSmall,
+                    Text("Information from Jikan / MyAnimeList and AniList", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
                 }
             }
@@ -105,7 +105,7 @@ private fun DetailHeader(anime: Anime) {
                         style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     anime.score?.let {
                         Text(scoreText(it), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
-                        Text("MyAnimeList score / 10", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Catalog score / 10", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     anime.rank?.let { Text("Ranked #$it", style = MaterialTheme.typography.bodyMedium) }
                     anime.episodes?.let { Text("$it episodes", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }

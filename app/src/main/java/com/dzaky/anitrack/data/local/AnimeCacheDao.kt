@@ -13,7 +13,7 @@ abstract class AnimeCacheDao {
     @Upsert
     abstract suspend fun save(entry: CachedAnimeEntity)
 
-    @Query("DELETE FROM anime_cache WHERE animeId NOT IN (SELECT animeId FROM anime_cache ORDER BY fetchedAt DESC LIMIT 100) AND animeId NOT IN (SELECT animeId FROM favorites) AND animeId NOT IN (SELECT animeId FROM watchlist)")
+    @Query("DELETE FROM anime_cache WHERE animeId > 0 AND animeId NOT IN (SELECT animeId FROM anime_cache WHERE animeId > 0 ORDER BY fetchedAt DESC LIMIT 100) AND animeId NOT IN (SELECT animeId FROM favorites) AND animeId NOT IN (SELECT animeId FROM watchlist)")
     abstract suspend fun trim()
 
     @Transaction

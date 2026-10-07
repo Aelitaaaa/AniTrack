@@ -20,18 +20,24 @@ jobs:
       - name: Install Android SDK packages
         run: |
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-37.0' 'build-tools;36.0.0'
-      - name: Build and lint release
-        run: bash ./gradlew assembleRelease lintRelease
+      - name: Test and build release
+        env:
+          ANITRACK_LIVE_TESTS: 'true'
+        run: bash ./gradlew test lintDebug lintRelease assembleDebug assembleRelease
       - name: Upload unsigned release for signing
         uses: actions/upload-artifact@v7
         with:
           name: AniTrack-release-unsigned
           path: app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
-      - name: Upload release lint report
+      - name: Upload release reports
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: release-lint
-          path: app/build/reports/lint-results-release.html
+          name: release-reports
+          path: |
+            app/build/reports/tests/
+            app/build/test-results/
+            app/build/reports/lint-results-debug.html
+            app/build/reports/lint-results-release.html
           if-no-files-found: ignore

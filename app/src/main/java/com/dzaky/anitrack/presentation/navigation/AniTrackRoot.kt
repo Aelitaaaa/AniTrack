@@ -51,6 +51,8 @@ import com.dzaky.anitrack.presentation.search.SearchScreen
 import com.dzaky.anitrack.presentation.search.SearchViewModel
 import com.dzaky.anitrack.presentation.settings.SettingsScreen
 import com.dzaky.anitrack.presentation.settings.SettingsViewModel
+import com.dzaky.anitrack.presentation.profile.ProfileScreen
+import com.dzaky.anitrack.presentation.profile.ProfileViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -59,7 +61,7 @@ private enum class MainDestination(val route: String, @StringRes val label: Int,
     Search("search", R.string.search, R.drawable.ic_search),
     Watchlist("watchlist", R.string.watchlist, R.drawable.ic_watchlist),
     Favorites("favorites", R.string.favorites, R.drawable.ic_heart_outline),
-    Settings("settings", R.string.settings, R.drawable.ic_settings),
+    Profile("profile", R.string.profile, R.drawable.ic_profile),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,7 +83,16 @@ fun AniTrackRoot(settingsViewModel: SettingsViewModel) {
     MessagesEffect(settingsViewModel.events, snackbar)
     Scaffold(
         topBar = { TopAppBar(
-            title = { Text(if (route == "home") "AniTrack" else destination?.let { stringResource(it.label) } ?: "Anime details", style = MaterialTheme.typography.titleLarge) },
+            title = { Text(when (route) {
+                "home" -> "AniTrack"
+                "settings" -> stringResource(R.string.settings)
+                else -> destination?.let { stringResource(it.label) } ?: "Anime details"
+            }, style = MaterialTheme.typography.titleLarge) },
+            actions = {
+                if (destination == MainDestination.Profile) IconButton(onClick = { navigation.navigate("settings") { launchSingleTop = true } }) {
+                    Icon(painterResource(R.drawable.ic_settings), stringResource(R.string.settings), Modifier.size(24.dp))
+                }
+            },
             navigationIcon = {
                 if (destination == null) IconButton(onClick = { navigation.navigateUp() }) {
                     Icon(painterResource(R.drawable.ic_back), stringResource(R.string.back), Modifier.size(24.dp))
@@ -126,6 +137,11 @@ fun AniTrackRoot(settingsViewModel: SettingsViewModel) {
                 FavoritesScreen(viewModel, openAnime, goHome)
             }
             composable("settings") { SettingsScreen(settingsViewModel) }
+            composable("profile") {
+                val viewModel: ProfileViewModel = hiltViewModel()
+                MessagesEffect(viewModel.events, snackbar)
+                ProfileScreen(viewModel)
+            }
             composable("anime/{animeId}", arguments = listOf(navArgument("animeId") { type = NavType.IntType })) {
                 val viewModel: AnimeDetailViewModel = hiltViewModel()
                 MessagesEffect(viewModel.events, snackbar)

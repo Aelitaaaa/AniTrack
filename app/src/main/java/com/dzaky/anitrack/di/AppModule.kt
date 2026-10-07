@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
 import com.dzaky.anitrack.data.local.AniTrackDatabase
 import com.dzaky.anitrack.data.remote.JikanApi
+import com.dzaky.anitrack.data.remote.AniListApi
 import com.dzaky.anitrack.data.settingsDataStore
 import dagger.Module
 import dagger.Provides
@@ -30,10 +31,10 @@ object AppModule {
     @Provides
     @Singleton
     fun client(): OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(12, TimeUnit.SECONDS)
-        .readTimeout(25, TimeUnit.SECONDS)
-        .callTimeout(35, TimeUnit.SECONDS)
-        .retryOnConnectionFailure(false)
+        .connectTimeout(6, TimeUnit.SECONDS)
+        .readTimeout(12, TimeUnit.SECONDS)
+        .callTimeout(18, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
         .build()
 
     @Provides
@@ -43,6 +44,14 @@ object AppModule {
         .client(client)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build().create(JikanApi::class.java)
+
+    @Provides
+    @Singleton
+    fun alternateApi(client: OkHttpClient, json: Json): AniListApi = Retrofit.Builder()
+        .baseUrl("https://graphql.anilist.co/")
+        .client(client)
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build().create(AniListApi::class.java)
 
     @Provides
     @Singleton

@@ -7,6 +7,7 @@ import com.dzaky.anitrack.data.local.FavoriteEntity
 import com.dzaky.anitrack.data.local.RecentAnimeEntity
 import com.dzaky.anitrack.data.local.SearchHistoryEntity
 import com.dzaky.anitrack.data.local.WatchEntry
+import com.dzaky.anitrack.data.local.CachedAnimeEntity
 import com.dzaky.anitrack.domain.WatchStatus
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -15,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -33,6 +35,15 @@ class AniTrackDatabaseTest {
     }
 
     @After fun closeDatabase() { database.close() }
+
+    @Test fun `discovery snapshots survive detail cache trimming`() = runBlocking {
+        val cache = database.animeCache()
+        cache.cache(CachedAnimeEntity(-1, "[]", 0))
+        repeat(105) { cache.cache(CachedAnimeEntity(it + 1, "{}", (it + 1).toLong())) }
+        assertEquals("[]", cache.get(-1)!!.json)
+        assertNull(cache.get(1))
+        assertTrue(cache.get(105) != null)
+    }
 
     @Test fun `saving a favorite twice does not duplicate it`() = runBlocking {
         val favorite = FavoriteEntity(1, "Title", null, null, "TV", 2024, 12, 1)

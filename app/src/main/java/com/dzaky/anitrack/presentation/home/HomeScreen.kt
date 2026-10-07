@@ -45,6 +45,8 @@ fun HomeScreen(viewModel: HomeViewModel, onAnimeClick: (Int) -> Unit) {
             }
             items(sections, key = { it.section.name }) { row ->
                 SectionHeading(row.section.title, Modifier.padding(horizontal = 20.dp))
+                if (row.isOffline) Text("Saved catalog · connection unavailable", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
                 Spacer(Modifier.height(16.dp))
                 when (val content = row.content) {
                     LoadState.Loading -> PosterSkeletonRow()
@@ -61,7 +63,7 @@ fun HomeScreen(viewModel: HomeViewModel, onAnimeClick: (Int) -> Unit) {
                 }
             }
             item(key = "attribution") {
-                Text("Anime information from MyAnimeList via Jikan", style = MaterialTheme.typography.labelSmall,
+                Text("Anime information from Jikan / MyAnimeList and AniList", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
             }
         }
