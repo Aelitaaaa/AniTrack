@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.AniTrack" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">#FAF8F5</item>
+        <item name="android:windowSplashScreenBackground">#FAF8F5</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+    </style>
+</resources>

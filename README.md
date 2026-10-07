@@ -42,7 +42,7 @@ Clone the repository and open its root folder in Android Studio. Let Gradle sync
 ## Building
 
 ```sh
-./gradlew test lintDebug assembleDebug
+bash ./gradlew test lintDebug assembleDebug
 ```
 
 On Windows:

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">AniTrack</string>
+    <string name="home">Home</string>
+    <string name="search">Search</string>
+    <string name="watchlist">Watchlist</string>
+    <string name="favorites">Favorites</string>
+    <string name="settings">Settings</string>
+    <string name="retry">Try again</string>
+    <string name="back">Back</string>
+    <string name="watch_trailer">Watch trailer</string>
+</resources>
