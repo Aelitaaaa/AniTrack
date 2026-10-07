@@ -4,6 +4,8 @@ A native Android anime tracking app built with Kotlin and Jetpack Compose.
 
 Find anime, save favorites, and keep track of the episode you left off on. No account or API key is required. Android 8.0 and newer are supported.
 
+Download the signed release APK from [GitHub Releases](https://github.com/Aelitaaaa/AniTrack/releases/tag/v1.0.0).
+
 ## Features
 
 - Discovery lists for currently airing, popular, top-rated, and upcoming anime.
@@ -51,11 +53,19 @@ On Windows:
 .\gradlew.bat test lintDebug assembleDebug
 ```
 
-The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. It uses the local Android debug signing key. Release signing is intentionally not configured.
+The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. It uses the local Android debug signing key.
 
 Tests cover API mapping and failures, catalog caching, database uniqueness and transactions, history limits, episode bounds and status changes, saved theme preferences, and Compose episode controls. Room and Compose tests use Robolectric; a device is not required. Compose controls are tested in the debug variant.
 
 GitHub Actions runs the tests, lint, and debug build, then uploads the APK and reports as artifacts.
+
+To build and lint an optimized release:
+
+```sh
+bash ./gradlew assembleRelease lintRelease
+```
+
+The manual **Release APK** workflow runs the same command and uploads `app/build/outputs/apk/release/app-release-unsigned.apk`. Release builds use R8 and resource shrinking. Signing is performed separately with a private release key; signing keys and passwords are not included in the repository. An unsigned APK must be aligned and signed before installation.
 
 ## API
 
