@@ -3,7 +3,9 @@ package com.dzaky.anitrack.presentation
 import android.app.Application
 import android.os.Looper
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
@@ -65,7 +67,7 @@ class CollectionsScreenTest {
         compose.onNodeWithText("Cancel").performClick()
         compose.onNodeWithText("Weekend").assertExists()
         compose.onNodeWithText("Delete").performClick()
-        compose.onAllNodesWithText("Delete").onLast().performClick()
+        compose.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
         waitFor { data()?.collections?.isEmpty() == true }
         compose.onNodeWithText("Make room for your favorites").assertExists()
     }
