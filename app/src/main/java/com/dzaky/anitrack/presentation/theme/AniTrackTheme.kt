@@ -72,7 +72,14 @@ fun AniTrackTheme(mode: ThemeMode = ThemeMode.System, content: @Composable () ->
     val dark = when (mode) {
         ThemeMode.System -> isSystemInDarkTheme()
         ThemeMode.Light -> false
-        ThemeMode.Dark -> true
+        ThemeMode.Dark, ThemeMode.Black -> true
     }
-    MaterialTheme(colorScheme = if (dark) DarkColors else LightColors, typography = AniTypography, content = content)
+    val colors = when {
+        mode == ThemeMode.Black -> DarkColors.copy(background = Color.Black, surface = Color.Black,
+            surfaceContainerLowest = Color.Black, surfaceContainerLow = Color(0xFF0C0C0C),
+            surfaceContainer = Color(0xFF141414), surfaceContainerHigh = Color(0xFF202020))
+        dark -> DarkColors
+        else -> LightColors
+    }
+    MaterialTheme(colorScheme = colors, typography = AniTypography, content = content)
 }

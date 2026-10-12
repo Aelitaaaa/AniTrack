@@ -94,6 +94,7 @@ class CatalogFallbackTest {
         override suspend fun topAnime(filter: String?, limit: Int, safeForWork: Boolean) = AnimeListResponse(data())
         override suspend fun airing(limit: Int, safeForWork: Boolean) = AnimeListResponse(data())
         override suspend fun upcoming(limit: Int, safeForWork: Boolean) = AnimeListResponse(data())
+        override suspend fun filteredSearch(query: String, page: Int, format: String?, status: String?, genres: String?, orderBy: String?, sort: String?, safeForWork: Boolean, limit: Int): AnimeListResponse = search(query, page, limit, safeForWork)
         override suspend fun search(query: String, page: Int, limit: Int, safeForWork: Boolean) = AnimeListResponse(data())
         override suspend fun detail(id: Int) = AnimeResponse(data().single())
         override suspend fun characters(id: Int) = CharactersResponse()
