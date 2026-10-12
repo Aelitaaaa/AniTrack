@@ -12,7 +12,7 @@ Download the signed release APK from [GitHub Releases](https://github.com/Aelita
 - Debounced search with pagination, format/genre/airing filters, ordering, and a removable local search history.
 - Anime details, synopsis, genres, studios, main characters, related anime, and YouTube trailers when available.
 - Favorites and a watchlist stored on the device.
-- Plan to watch, watching, and completed statuses with manual episode editing and progress controls.
+- Plan to watch, watching, completed, on-hold, and dropped statuses with manual episode editing and progress controls.
 - Light, dark, pure black, and system themes with saved preferences. Cover grid or list layouts for the library.
 - Recently viewed titles, capped at 30 entries. Search history is capped at 15 entries.
 - Cached details for previously opened anime, with an offline fallback when the catalog cannot be reached.
@@ -48,6 +48,8 @@ Open **Favorites → Collections** to create or rename a collection. On an anime
 Use **Rating and notes** on the detail page to save a personal score or a note. Personal ratings do not change catalog scores. The library can be filtered by title and sorted by recent activity, title, score, or watched episodes. Choose list or cover grid in **Profile → Settings**.
 
 Open **Profile → View statistics** for recorded episode counts, watch statuses, format breakdowns, and personal ratings. Titles with unknown episode totals are shown separately.
+
+Use **On hold** to pause a title or **Dropped** to stop tracking it as an active watch. Both keep recorded episodes, appear in watchlist filters and statistics, and survive backups. Changing back to **Watching** resumes from the same count. Correcting their progress keeps the selected status; reaching a known episode total marks the title completed.
 
 ## Backup and privacy
 

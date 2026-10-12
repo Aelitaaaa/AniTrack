@@ -39,4 +39,23 @@ class WatchProgressTest {
     @Test fun `planning an anime resets its progress`() {
         assertEquals(WatchProgress(0, WatchStatus.Planned), WatchProgress(12, WatchStatus.Completed).changeStatus(WatchStatus.Planned, 12))
     }
+
+    @Test fun `pausing dropping and resuming preserve recorded episodes`() {
+        val watching = WatchProgress(5, WatchStatus.Watching)
+        for (status in listOf(WatchStatus.OnHold, WatchStatus.Dropped)) {
+            val paused = watching.changeStatus(status, 12)
+            assertEquals(WatchProgress(5, status), paused)
+            assertEquals(watching, paused.changeStatus(WatchStatus.Watching, 12))
+        }
+    }
+
+    @Test fun `correcting inactive progress keeps the selected state`() {
+        for (status in listOf(WatchStatus.OnHold, WatchStatus.Dropped)) {
+            val paused = WatchProgress(5, status)
+            assertEquals(WatchProgress(4, status), paused.changeEpisodes(4, 12))
+            assertEquals(WatchProgress(6, status), paused.changeEpisodes(6, null))
+            assertEquals(WatchProgress(0, status), paused.changeEpisodes(-1, null))
+            assertEquals(WatchProgress(12, WatchStatus.Completed), paused.changeEpisodes(12, 12))
+        }
+    }
 }

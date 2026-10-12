@@ -5,8 +5,10 @@ import com.dzaky.anitrack.data.backup.BackupDocument
 import com.dzaky.anitrack.data.local.CollectionAnimeEntity
 import com.dzaky.anitrack.data.local.CollectionEntity
 import com.dzaky.anitrack.data.local.PersonalAnimeEntity
+import com.dzaky.anitrack.data.local.WatchEntry
 import com.dzaky.anitrack.domain.AnimeBadge
 import com.dzaky.anitrack.domain.LocalProfile
+import com.dzaky.anitrack.domain.WatchStatus
 import java.io.ByteArrayInputStream
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -39,5 +41,13 @@ class BackupCodecTest {
     @Test fun inputLimitIsCheckedBeforeParsing() {
         val bytes = ByteArray(BackupCodec.MaxBytes + 1)
         assertThrows(IllegalArgumentException::class.java) { BackupCodec.readLimited(ByteArrayInputStream(bytes)) }
+    }
+
+    @Test fun backupPreservesInactiveStatusesAndTheirEpisodeCounts() {
+        val document = BackupDocument(createdAt = 1, watchlist = listOf(
+            WatchEntry(1, "Paused title", null, null, "TV", 2024, 12, WatchStatus.OnHold, 5, 1),
+            WatchEntry(2, "Dropped title", null, null, "TV", 2024, null, WatchStatus.Dropped, 3, 1),
+        ))
+        assertEquals(document, BackupCodec.decode(BackupCodec.encode(document)))
     }
 }
