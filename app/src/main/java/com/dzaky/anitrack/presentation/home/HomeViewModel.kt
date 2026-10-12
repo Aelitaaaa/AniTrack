@@ -6,6 +6,7 @@ import com.dzaky.anitrack.data.AnimeRepository
 import com.dzaky.anitrack.data.LibraryRepository
 import com.dzaky.anitrack.domain.Anime
 import com.dzaky.anitrack.domain.DiscoverySection
+import com.dzaky.anitrack.domain.WatchStatus
 import com.dzaky.anitrack.presentation.components.LoadState
 import com.dzaky.anitrack.presentation.components.catalogMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,6 +35,8 @@ class HomeViewModel @Inject constructor(
     val refreshing = _refreshing.asStateFlow()
     val recent = libraryRepository.recentlyViewed.catch { emit(emptyList()) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val watching = libraryRepository.watchlist.map { entries -> entries.filter { it.status == WatchStatus.Watching }.take(10) }
+        .catch { emit(emptyList()) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     private var refreshJob: Job? = null
 
     init { refresh(force = false) }

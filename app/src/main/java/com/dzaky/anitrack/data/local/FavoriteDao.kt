@@ -11,6 +11,12 @@ abstract class FavoriteDao {
     @Query("SELECT * FROM favorites ORDER BY addedAt DESC, animeId")
     abstract fun observeAll(): Flow<List<FavoriteEntity>>
 
+    @Query("SELECT * FROM favorites ORDER BY addedAt DESC, animeId")
+    abstract suspend fun snapshot(): List<FavoriteEntity>
+
+    @Query("SELECT * FROM favorites WHERE animeId = :id")
+    abstract suspend fun get(id: Int): FavoriteEntity?
+
     @Query("SELECT * FROM favorites WHERE animeId = :id")
     abstract fun observe(id: Int): Flow<FavoriteEntity?>
 

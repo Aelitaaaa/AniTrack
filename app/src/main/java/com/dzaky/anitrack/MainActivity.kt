@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
             val dark = when (theme) {
                 ThemeMode.System -> isSystemInDarkTheme()
                 ThemeMode.Light -> false
-                ThemeMode.Dark -> true
+                ThemeMode.Dark, ThemeMode.Black -> true
             }
             SideEffect {
                 WindowCompat.getInsetsController(window, window.decorView).apply {

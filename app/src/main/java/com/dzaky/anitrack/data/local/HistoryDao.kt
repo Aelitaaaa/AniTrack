@@ -14,6 +14,12 @@ abstract class HistoryDao {
     @Query("SELECT * FROM search_history ORDER BY searchedAt DESC, query")
     abstract fun observeSearches(): Flow<List<SearchHistoryEntity>>
 
+    @Query("SELECT * FROM recently_viewed ORDER BY viewedAt DESC, animeId")
+    abstract suspend fun recentSnapshot(): List<RecentAnimeEntity>
+
+    @Query("SELECT * FROM search_history ORDER BY searchedAt DESC, query")
+    abstract suspend fun searchSnapshot(): List<SearchHistoryEntity>
+
     @Upsert
     abstract suspend fun saveRecent(entry: RecentAnimeEntity)
 

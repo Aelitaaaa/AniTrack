@@ -6,6 +6,10 @@ import com.dzaky.anitrack.data.remote.AniListCatalog
 import com.dzaky.anitrack.data.remote.RequestGate
 import com.dzaky.anitrack.di.AppModule
 import com.dzaky.anitrack.domain.DiscoverySection
+import com.dzaky.anitrack.domain.SearchFilters
+import com.dzaky.anitrack.domain.AnimeFormat
+import com.dzaky.anitrack.domain.AnimeGenre
+import com.dzaky.anitrack.domain.CatalogSort
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -26,6 +30,9 @@ class LiveCatalogTest {
         assertEquals(20, backup.detail(20).id)
         gate.awaitTurn(2_100)
         assertTrue(backup.characters(20).isNotEmpty())
+        gate.awaitTurn(2_100)
+        assertTrue(backup.search("Naruto", 1, SearchFilters(format = AnimeFormat.TV, genre = AnimeGenre.Action,
+            sort = CatalogSort.Title)).anime.any { it.id == 20 })
     }
 
     @Test fun `live automatic catalog returns real discovery titles`() = runBlocking {

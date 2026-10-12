@@ -1,5 +1,8 @@
 package com.dzaky.anitrack.domain
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class WatchStatus(val label: String) {
     Planned("Plan to watch"),
     Watching("Watching"),

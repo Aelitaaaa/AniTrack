@@ -1,7 +1,9 @@
 package com.dzaky.anitrack.domain
 
 import java.util.Locale
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class LocalProfile(val id: String, val displayName: String, val username: String, val bio: String, val createdAt: Long)
 
 data class ProfileInput(val displayName: String, val username: String, val bio: String = "") {
@@ -19,6 +21,7 @@ data class ProfileInput(val displayName: String, val username: String, val bio: 
 
 data class ProfileStats(val episodes: Long = 0, val completed: Int = 0, val favorites: Int = 0)
 
+@Serializable
 enum class AnimeBadge(val title: String, val requirement: String, val episodes: Long = 0, val completed: Int = 0, val favorites: Int = 0) {
     PendatangBaru("Pendatang Baru", "Create your local profile."),
     MulaiNonton("Mulai Nonton", "Record your first watched episode.", episodes = 1),

@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
 import com.dzaky.anitrack.data.local.AniTrackDatabase
+import com.dzaky.anitrack.data.local.MIGRATION_1_2
 import com.dzaky.anitrack.data.remote.JikanApi
 import com.dzaky.anitrack.data.remote.AniListApi
 import com.dzaky.anitrack.data.settingsDataStore
@@ -57,7 +58,7 @@ object AppModule {
     @Singleton
     fun database(@ApplicationContext context: Context): AniTrackDatabase = Room.databaseBuilder(
         context, AniTrackDatabase::class.java, "anitrack.db",
-    ).build()
+    ).addMigrations(MIGRATION_1_2).build()
 
     @Provides fun favorites(database: AniTrackDatabase) = database.favorites()
     @Provides fun watchlist(database: AniTrackDatabase) = database.watchlist()

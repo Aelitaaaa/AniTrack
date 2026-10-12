@@ -5,6 +5,8 @@ import com.dzaky.anitrack.domain.Anime
 import com.dzaky.anitrack.domain.AnimeCharacter
 import com.dzaky.anitrack.domain.AnimePage
 import com.dzaky.anitrack.domain.DiscoverySection
+import com.dzaky.anitrack.domain.SearchFilters
+import com.dzaky.anitrack.domain.CatalogSort
 import com.dzaky.anitrack.domain.RelatedAnime
 import java.util.Locale
 import javax.inject.Inject
@@ -30,12 +32,15 @@ class AniListCatalog @Inject constructor(private val api: AniListApi) {
         return fetchPage(AniListRequest(PageQuery, variables)).media.mapNotNull { it.toAnime() }.distinctBy { it.id }
     }
 
-    suspend fun search(query: String, page: Int): AnimePage {
+    suspend fun search(query: String, page: Int, filters: SearchFilters = SearchFilters()): AnimePage {
         val result = fetchPage(AniListRequest(PageQuery, buildJsonObject {
             put("page", page)
             put("perPage", 25)
-            put("sort", buildJsonArray { add("SEARCH_MATCH") })
-            put("search", query)
+            put("sort", buildJsonArray { add(if (query.isBlank() && filters.sort == CatalogSort.Relevance) "POPULARITY_DESC" else filters.sort.aniList) })
+            if (query.isNotBlank()) put("search", query)
+            filters.format?.let { put("format", it.aniList) }
+            filters.status?.let { put("status", it.aniList) }
+            filters.genre?.let { put("genre", it.label) }
         }))
         return AnimePage(result.media.mapNotNull { it.toAnime() }.distinctBy { it.id }, result.pageInfo.hasNextPage)
     }
@@ -65,10 +70,10 @@ class AniListCatalog @Inject constructor(private val api: AniListApi) {
     companion object {
         private const val Cards = "idMal title { english romaji native } coverImage { extraLarge large } averageScore format status seasonYear episodes"
         val PageQuery = """
-            query Catalog(${'$'}page: Int!, ${'$'}perPage: Int!, ${'$'}sort: [MediaSort], ${'$'}status: MediaStatus, ${'$'}search: String) {
+            query Catalog(${'$'}page: Int!, ${'$'}perPage: Int!, ${'$'}sort: [MediaSort], ${'$'}status: MediaStatus, ${'$'}search: String, ${'$'}format: MediaFormat, ${'$'}genre: String) {
                 Page(page: ${'$'}page, perPage: ${'$'}perPage) {
                     pageInfo { hasNextPage }
-                    media(type: ANIME, isAdult: false, sort: ${'$'}sort, status: ${'$'}status, search: ${'$'}search) { $Cards }
+                    media(type: ANIME, isAdult: false, sort: ${'$'}sort, status: ${'$'}status, search: ${'$'}search, format: ${'$'}format, genre: ${'$'}genre) { $Cards }
                 }
             }
         """.trimIndent()

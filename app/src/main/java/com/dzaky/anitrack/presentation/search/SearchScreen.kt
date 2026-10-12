@@ -20,9 +20,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -31,6 +36,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dzaky.anitrack.R
+import com.dzaky.anitrack.domain.SearchFilters
 import com.dzaky.anitrack.presentation.components.AnimeResultRow
 import com.dzaky.anitrack.presentation.components.MessageContent
 import com.dzaky.anitrack.presentation.components.PosterSkeletonRow
@@ -40,6 +46,8 @@ fun SearchScreen(viewModel: SearchViewModel, onAnimeClick: (Int) -> Unit) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val history by viewModel.history.collectAsStateWithLifecycle()
+    val filters by viewModel.filters.collectAsStateWithLifecycle()
+    var editingFilters by rememberSaveable { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
     Column(Modifier.fillMaxSize()) {
         OutlinedTextField(value = query, onValueChange = viewModel::updateQuery,
@@ -54,6 +62,10 @@ fun SearchScreen(viewModel: SearchViewModel, onAnimeClick: (Int) -> Unit) {
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
         )
+        Row(Modifier.padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FilterChip(selected = !filters.isDefault, onClick = { editingFilters = true }, label = { Text("Filters (" + filters.count + ")") })
+            if (!filters.isDefault) TextButton(onClick = { viewModel.updateFilters(SearchFilters()) }) { Text("Reset filters") }
+        }
         when (val current = state) {
             SearchUiState.Idle -> {
                 if (history.isEmpty()) {
@@ -77,7 +89,8 @@ fun SearchScreen(viewModel: SearchViewModel, onAnimeClick: (Int) -> Unit) {
             is SearchUiState.Failed -> MessageContent("Couldn't search anime", current.message, Modifier.weight(1f), onAction = viewModel::retry)
             is SearchUiState.Results -> {
                 if (current.anime.isEmpty()) {
-                    MessageContent("No matches for “${current.query}”", "Try a different spelling or a shorter title.", Modifier.weight(1f))
+                    MessageContent(if (current.query.isBlank()) "No anime match these filters" else "No matches for “${current.query}”",
+                        "Try a different title or relax your filters.", Modifier.weight(1f))
                 } else {
                     LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                         items(current.anime, key = { it.id }) { anime ->
@@ -99,4 +112,9 @@ fun SearchScreen(viewModel: SearchViewModel, onAnimeClick: (Int) -> Unit) {
             }
         }
     }
+    if (editingFilters) SearchFilterDialog(filters, onDismiss = { editingFilters = false }, onApply = {
+        viewModel.updateFilters(it)
+        editingFilters = false
+        keyboard?.hide()
+    })
 }

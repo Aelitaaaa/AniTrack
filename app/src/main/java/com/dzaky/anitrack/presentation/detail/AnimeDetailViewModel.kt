@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.dzaky.anitrack.data.AnimeDetailResult
 import com.dzaky.anitrack.data.AnimeRepository
 import com.dzaky.anitrack.data.LibraryRepository
+import com.dzaky.anitrack.data.ExtrasRepository
+import com.dzaky.anitrack.data.local.PersonalAnimeEntity
 import com.dzaky.anitrack.domain.AnimeCharacter
 import com.dzaky.anitrack.domain.WatchStatus
 import com.dzaky.anitrack.presentation.components.LoadState
@@ -30,6 +32,7 @@ class AnimeDetailViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val animeRepository: AnimeRepository,
     private val libraryRepository: LibraryRepository,
+    private val extras: ExtrasRepository,
 ) : ViewModel() {
     private val id: Int = checkNotNull(savedState["animeId"])
     private val _state = MutableStateFlow<LoadState<AnimeDetailResult>>(LoadState.Loading)
@@ -38,6 +41,18 @@ class AnimeDetailViewModel @Inject constructor(
     val characters = _characters.asStateFlow()
     private val messages = Channel<String>(Channel.BUFFERED)
     val events = messages.receiveAsFlow()
+    val collections = extras.collections.catch { messages.send(StorageError); emit(emptyList()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val memberships = extras.members.map { items -> items.filter { it.animeId == id }.map { it.collectionId }.toSet() }
+        .catch { messages.send(StorageError); emit(emptySet()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+    val personal = extras.personal(id).map<PersonalAnimeEntity?, LoadState<PersonalAnimeEntity?>> { LoadState.Ready(it) }
+        .catch { emit(LoadState.Failed(StorageError)) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LoadState.Loading)
+    private val _savingPersonal = MutableStateFlow(false)
+    val savingPersonal = _savingPersonal.asStateFlow()
+    private val personalSavedMessages = Channel<Unit>(Channel.BUFFERED)
+    val personalSaved = personalSavedMessages.receiveAsFlow()
     val isFavorite = libraryRepository.favorite(id).map { it != null }
         .catch { messages.send(StorageError); emit(false) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
@@ -97,6 +112,31 @@ class AnimeDetailViewModel @Inject constructor(
     fun adjustEpisodes(amount: Int) = change { libraryRepository.adjustEpisodes(id, amount) }
     fun setEpisodes(watched: Int) = change { libraryRepository.setEpisodes(id, watched) }
     fun setStatus(status: WatchStatus) = change { libraryRepository.setStatus(id, status) }
+
+    fun setMembership(collectionId: String, included: Boolean) {
+        val anime = (_state.value as? LoadState.Ready)?.value?.anime ?: return
+        change { extras.setMembership(collectionId, anime, included) }
+    }
+
+    fun createCollection(name: String) {
+        val anime = (_state.value as? LoadState.Ready)?.value?.anime ?: return
+        change { extras.setMembership(extras.createCollection(name), anime, true) }
+    }
+
+    fun savePersonal(rating: Int?, notes: String) {
+        if (_savingPersonal.value) return
+        val anime = (_state.value as? LoadState.Ready)?.value?.anime ?: return
+        _savingPersonal.value = true
+        viewModelScope.launch {
+            try {
+                extras.savePersonal(anime, rating, notes)
+                personalSavedMessages.send(Unit)
+                messages.send("Rating and notes saved")
+            } catch (error: CancellationException) { throw error }
+            catch (error: Exception) { messages.send("Couldn't save your rating and notes. Try again.") }
+            finally { _savingPersonal.value = false }
+        }
+    }
 
     private fun change(block: suspend () -> Unit) {
         viewModelScope.launch {

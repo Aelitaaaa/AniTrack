@@ -13,6 +13,8 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
+import kotlinx.serialization.Serializable
 
 @Singleton
 class ProfileRepository @Inject constructor(private val store: DataStore<Preferences>) {
@@ -47,4 +49,27 @@ class ProfileRepository @Inject constructor(private val store: DataStore<Prefere
             if (p[id] != null) p[badges] = p[badges].orEmpty() + earned.map { it.name }
         }
     }
+
+    suspend fun snapshot(): ProfileSnapshot {
+        val p = store.data.first()
+        val profile = p[id]?.let { LocalProfile(it, p[name].orEmpty(), p[username].orEmpty(), p[bio].orEmpty(), p[createdAt] ?: 0L) }
+        return ProfileSnapshot(profile, AnimeBadge.entries.filter { it.name in p[badges].orEmpty() }.toSet())
+    }
+
+    suspend fun restore(snapshot: ProfileSnapshot) {
+        val incoming = snapshot.profile ?: return
+        store.edit { p ->
+            if (p[id] == null) {
+                p[id] = incoming.id
+                p[name] = incoming.displayName
+                p[username] = incoming.username
+                p[bio] = incoming.bio
+                p[createdAt] = incoming.createdAt
+            }
+            if (p[id] == incoming.id) p[badges] = p[badges].orEmpty() + snapshot.badges.map { it.name } + AnimeBadge.PendatangBaru.name
+        }
+    }
 }
+
+@Serializable
+data class ProfileSnapshot(val profile: LocalProfile? = null, val badges: Set<AnimeBadge> = emptySet())

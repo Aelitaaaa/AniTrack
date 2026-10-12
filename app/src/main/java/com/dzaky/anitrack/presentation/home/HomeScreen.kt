@@ -1,6 +1,7 @@
 package com.dzaky.anitrack.presentation.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -29,12 +30,26 @@ fun HomeScreen(viewModel: HomeViewModel, onAnimeClick: (Int) -> Unit) {
     val sections by viewModel.sections.collectAsStateWithLifecycle()
     val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
+    val watching by viewModel.watching.collectAsStateWithLifecycle()
     PullToRefreshBox(isRefreshing = refreshing, onRefresh = { viewModel.refresh() }) {
         LazyColumn(contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
             item(key = "intro") {
                 Text("Find your next watch.", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
                 Text("Discover anime. Keep your place.", color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 20.dp))
+            }
+            if (watching.isNotEmpty()) item(key = "watching") {
+                SectionHeading("Continue watching", Modifier.padding(horizontal = 20.dp))
+                Spacer(Modifier.height(16.dp))
+                LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    items(watching, key = { it.animeId }) { entry ->
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            AnimeCard(entry.toAnime(), onClick = { onAnimeClick(entry.animeId) })
+                            Text(entry.watchedEpisodes.toString() + " / " + (entry.totalEpisodes?.toString() ?: "?") + " episodes",
+                                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
             }
             if (recent.isNotEmpty()) item(key = "recent") {
                 SectionHeading("Recently viewed", Modifier.padding(horizontal = 20.dp))

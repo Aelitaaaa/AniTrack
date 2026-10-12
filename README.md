@@ -9,16 +9,21 @@ Download the signed release APK from [GitHub Releases](https://github.com/Aelita
 ## Features
 
 - Discovery lists for currently airing, popular, top-rated, and upcoming anime.
-- Debounced search with pagination and a removable local search history.
+- Debounced search with pagination, format/genre/airing filters, ordering, and a removable local search history.
 - Anime details, synopsis, genres, studios, main characters, related anime, and YouTube trailers when available.
 - Favorites and a watchlist stored on the device.
 - Plan to watch, watching, and completed statuses with manual episode editing and progress controls.
-- Light, dark, and system themes with saved preferences.
+- Light, dark, pure black, and system themes with saved preferences. Cover grid or list layouts for the library.
 - Recently viewed titles, capped at 30 entries. Search history is capped at 15 entries.
 - Cached details for previously opened anime, with an offline fallback when the catalog cannot be reached.
 - A local profile with a display name, username, bio, and watch statistics. No online registration or password is needed.
 - Five persistent anime badges: Pendatang Baru, Mulai Nonton, Kolektor, Maraton, and Sepuh Anime.
-- Automatic catalog fallback to AniList and saved discovery lists for offline browsing.
+- Automatic catalog fallback to AniList and saved discovery lists for offline browsing, with an optional manual source selection.
+- Custom collections with multiple memberships per anime, renaming, and removal.
+- Personal ratings from 1 to 10 and private notes on each anime.
+- Continue-watching shelf and statistics for episode progress, formats, and personal ratings.
+- Incognito mode that hides history and stops recording new searches and viewed titles.
+- JSON backup and restore for profiles, badges, lists, collections, notes, settings, and histories.
 
 Saved lists and preferences work without an internet connection. Discovery, search, new details, trailers, and uncached artwork need internet access. AniTrack tracks anime; it does not provide episodes or streaming.
 
@@ -32,9 +37,25 @@ Dependency versions are pinned in [`gradle/libs.versions.toml`](gradle/libs.vers
 
 Screens observe ViewModel state. ViewModels use a catalog repository, a local library repository, and a preferences repository. Retrofit handles catalog requests; Room stores the library and cached details. Episode bounds and status transitions are pure Kotlin logic in `WatchProgress`.
 
-The catalog shares a request gate across screens and retries an HTTP 429 once. If Jikan is slow, an AniList request starts after two seconds; the first successful response wins and the other request is cancelled. The app temporarily prefers a working backup and avoids repeating connection timeouts for every section when both providers fail. AniList requests stay below its reduced 30 requests/minute quota. Both providers use MyAnimeList ids in saved lists; entries without a MAL id are excluded. Discovery snapshots and details are saved in Room for offline use. Database updates to episode progress run in transactions.
+The catalog shares a request gate across screens and retries an HTTP 429 once. If Jikan is slow, an AniList request starts after two seconds; the first successful response wins and the other request is cancelled. The app temporarily prefers a working backup and avoids repeating connection timeouts for every section when both providers fail. AniList requests stay below its reduced 30 requests/minute quota. Both providers use MyAnimeList ids in saved lists; entries without a MAL id are excluded. Discovery snapshots and details are saved in Room for offline use. Database updates to episode progress run in transactions. Version 2 adds collections, collection memberships, and personal ratings/notes through an explicit migration; the original tables are preserved. Library sorting and statistics use local data.
 
 Profiles and earned badges use DataStore alongside the existing theme preference. A profile belongs to this device and uses its current favorites and watchlist. Badges unlock at these milestones: create a profile; record one episode; save five favorites; record 100 episodes; finish 25 anime and record 500 episodes for Sepuh Anime. Earned badges remain unlocked even if entries are later removed from the watchlist.
+
+## Using your library
+
+Open **Favorites → Collections** to create or rename a collection. On an anime detail page, use **Collections** to add the title to one or more groups. Deleting a collection removes its memberships while keeping favorites and watch progress.
+
+Use **Rating and notes** on the detail page to save a personal score or a note. Personal ratings do not change catalog scores. The library can be filtered by title and sorted by recent activity, title, score, or watched episodes. Choose list or cover grid in **Profile → Settings**.
+
+Open **Profile → View statistics** for recorded episode counts, watch statuses, format breakdowns, and personal ratings. Titles with unknown episode totals are shown separately.
+
+## Backup and privacy
+
+In **Profile → Settings → Backup and restore**, export a `.anitrack.json` file to a location selected with Android's document picker. Restore validates the whole file before writing, merges lists, keeps newer episode progress and notes, and matches collections by normalized name. Reimporting a file does not duplicate memberships. An existing profile is kept when the incoming profile has a different id. Profiles with the same id combine earned badges.
+
+Backups include personal notes and histories. They do not include remote artwork, discovery snapshots, or downloaded anime episodes. The file limit is 10 MB. Database changes are applied in one transaction; profile/settings restoration uses DataStore separately and reports a partial restore if that storage fails.
+
+Incognito hides existing history and stops recording new searches and viewed titles. Manual changes to favorites, collections, ratings, and watch progress are still saved. It does not hide requests from catalog providers. If preferences cannot be read, history recording stops.
 
 ## Getting started
 
@@ -60,9 +81,9 @@ On Windows:
 
 The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. It uses the local Android debug signing key.
 
-Tests cover API mapping and failures, provider fallback and cancellation, persistent catalog caching, database uniqueness and transactions, history limits, episode bounds and status changes, profile persistence and validation, badge thresholds, saved theme preferences, and Compose episode and profile controls. Room and Compose tests use Robolectric; a device is not required. Compose controls are tested in the debug variant.
+Tests cover API mapping and failures, provider fallback and cancellation, persistent catalog caching, database uniqueness and transactions, history limits, episode bounds and status changes, profile persistence and validation, badge thresholds, saved preferences, version 1-to-2 migration, collection uniqueness, backup validation/merge/idempotency, privacy, filters, source selection, statistics, and Compose episode/profile/collection/rating controls. Room and Compose tests use Robolectric; a device is not required. Compose controls are tested in the debug variant.
 
-GitHub Actions runs the tests, lint, and debug build, then uploads the APK and reports as artifacts.
+GitHub Actions runs the tests, both lint variants, and debug/release builds, then uploads APKs and reports as artifacts. Live catalog checks are enabled for these builds; local test runs skip them unless `ANITRACK_LIVE_TESTS=true`.
 
 To build and lint an optimized release:
 

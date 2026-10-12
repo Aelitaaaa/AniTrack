@@ -11,17 +11,22 @@ import com.dzaky.anitrack.domain.Anime
 import com.dzaky.anitrack.domain.WatchStatus
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.util.Locale
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 
 @Singleton
 class LibraryRepository @Inject constructor(
     private val favoritesDao: FavoriteDao,
     private val watchlistDao: WatchlistDao,
     private val historyDao: HistoryDao,
+    private val settings: SettingsRepository? = null,
 ) {
     val favorites = favoritesDao.observeAll()
     val watchlist = watchlistDao.observeAll()
-    val recentlyViewed = historyDao.observeRecent()
-    val searchHistory = historyDao.observeSearches()
+    private val preferences = settings?.preferences ?: flowOf(AppPreferences())
+    val recentlyViewed = combine(historyDao.observeRecent(), preferences) { history, p -> if (p.incognito) emptyList() else history }
+    val searchHistory = combine(historyDao.observeSearches(), preferences) { history, p -> if (p.incognito) emptyList() else history }
 
     fun favorite(id: Int) = favoritesDao.observe(id)
     fun watchEntry(id: Int) = watchlistDao.observe(id)
@@ -43,13 +48,17 @@ class LibraryRepository @Inject constructor(
     suspend fun setEpisodes(id: Int, watched: Int) = watchlistDao.setEpisodes(id, watched, System.currentTimeMillis())
     suspend fun setStatus(id: Int, status: WatchStatus) = watchlistDao.setStatus(id, status, System.currentTimeMillis())
 
-    suspend fun recordView(anime: Anime) = historyDao.recordView(
+    suspend fun recordView(anime: Anime) {
+        if (settings?.historyAllowed() == false) return
+        historyDao.recordView(
         RecentAnimeEntity(anime.id, anime.title, anime.posterUrl, anime.score, anime.type,
             anime.year, anime.episodes, System.currentTimeMillis()),
-    )
+        )
+    }
 
     suspend fun recordSearch(query: String) {
-        val normalized = query.trim().lowercase()
+        if (settings?.historyAllowed() == false) return
+        val normalized = query.trim().lowercase(Locale.ROOT)
         if (normalized.isNotEmpty()) historyDao.recordSearch(SearchHistoryEntity(normalized, System.currentTimeMillis()))
     }
 

@@ -47,7 +47,7 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel) {
+fun ProfileScreen(viewModel: ProfileViewModel, onStatistics: () -> Unit = {}) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val saving by viewModel.saving.collectAsStateWithLifecycle()
     var editing by rememberSaveable { mutableStateOf(false) }
@@ -101,6 +101,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                 }
             }
         }
+        item(key = "statistics") { OutlinedButton(onClick = onStatistics) { Text("View statistics") } }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Anime badges", style = MaterialTheme.typography.titleLarge)

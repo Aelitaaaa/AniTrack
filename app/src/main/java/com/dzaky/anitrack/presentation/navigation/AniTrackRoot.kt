@@ -24,6 +24,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dzaky.anitrack.presentation.library.CollectionsScreen
+import com.dzaky.anitrack.presentation.library.CollectionsViewModel
+import com.dzaky.anitrack.presentation.profile.StatisticsScreen
+import com.dzaky.anitrack.presentation.profile.StatisticsViewModel
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -67,6 +72,7 @@ private enum class MainDestination(val route: String, @StringRes val label: Int,
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AniTrackRoot(settingsViewModel: SettingsViewModel) {
+    val preferences by settingsViewModel.preferences.collectAsStateWithLifecycle()
     val navigation = rememberNavController()
     val currentEntry by navigation.currentBackStackEntryAsState()
     val route = currentEntry?.destination?.route ?: MainDestination.Home.route
@@ -86,9 +92,13 @@ fun AniTrackRoot(settingsViewModel: SettingsViewModel) {
             title = { Text(when (route) {
                 "home" -> "AniTrack"
                 "settings" -> stringResource(R.string.settings)
+                "collections" -> "Collections"
+                "statistics" -> "Statistics"
                 else -> destination?.let { stringResource(it.label) } ?: "Anime details"
             }, style = MaterialTheme.typography.titleLarge) },
             actions = {
+                if (preferences.incognito) Text("Incognito", modifier = Modifier.padding(end = 12.dp),
+                    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 if (destination == MainDestination.Profile) IconButton(onClick = { navigation.navigate("settings") { launchSingleTop = true } }) {
                     Icon(painterResource(R.drawable.ic_settings), stringResource(R.string.settings), Modifier.size(24.dp))
                 }
@@ -129,18 +139,27 @@ fun AniTrackRoot(settingsViewModel: SettingsViewModel) {
             composable("watchlist") {
                 val viewModel: LibraryViewModel = hiltViewModel()
                 MessagesEffect(viewModel.events, snackbar)
-                WatchlistScreen(viewModel, openAnime, goHome)
+                WatchlistScreen(viewModel, openAnime, goHome, preferences.layout)
             }
             composable("favorites") {
                 val viewModel: LibraryViewModel = hiltViewModel()
                 MessagesEffect(viewModel.events, snackbar)
-                FavoritesScreen(viewModel, openAnime, goHome)
+                FavoritesScreen(viewModel, openAnime, goHome, onCollections = { navigation.navigate("collections") { launchSingleTop = true } }, layout = preferences.layout)
             }
             composable("settings") { SettingsScreen(settingsViewModel) }
+            composable("collections") {
+                val viewModel: CollectionsViewModel = hiltViewModel()
+                MessagesEffect(viewModel.events, snackbar)
+                CollectionsScreen(viewModel, openAnime, preferences.layout)
+            }
+            composable("statistics") {
+                val viewModel: StatisticsViewModel = hiltViewModel()
+                StatisticsScreen(viewModel, openAnime, goHome)
+            }
             composable("profile") {
                 val viewModel: ProfileViewModel = hiltViewModel()
                 MessagesEffect(viewModel.events, snackbar)
-                ProfileScreen(viewModel)
+                ProfileScreen(viewModel, onStatistics = { navigation.navigate("statistics") { launchSingleTop = true } })
             }
             composable("anime/{animeId}", arguments = listOf(navArgument("animeId") { type = NavType.IntType })) {
                 val viewModel: AnimeDetailViewModel = hiltViewModel()

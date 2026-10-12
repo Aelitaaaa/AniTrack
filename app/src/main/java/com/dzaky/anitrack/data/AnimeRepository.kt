@@ -11,6 +11,7 @@ import com.dzaky.anitrack.domain.Anime
 import com.dzaky.anitrack.domain.AnimeCharacter
 import com.dzaky.anitrack.domain.AnimePage
 import com.dzaky.anitrack.domain.DiscoverySection
+import com.dzaky.anitrack.domain.SearchFilters
 import java.io.IOException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
@@ -18,6 +19,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.SerializationException
@@ -36,6 +38,7 @@ class AnimeRepository @Inject constructor(
     private val cache: AnimeCacheDao,
     private val json: Json,
     private val alternate: AniListCatalog? = null,
+    private val settings: SettingsRepository? = null,
 ) {
     @Volatile private var preferAlternateUntil = 0L
     @Volatile private var failureUntil = 0L
@@ -74,9 +77,12 @@ class AnimeRepository @Inject constructor(
         }
     }
 
-    suspend fun search(query: String, page: Int): AnimePage {
-        return catalogRequest(backup = { checkNotNull(alternate).search(query.trim(), page) }) {
-            val response = api.search(query.trim(), page)
+    suspend fun search(query: String, page: Int, filters: SearchFilters = SearchFilters()): AnimePage {
+        return catalogRequest(backup = { checkNotNull(alternate).search(query.trim(), page, filters) }) {
+            val response = if (filters.isDefault) api.search(query.trim(), page) else api.filteredSearch(
+                query.trim(), page, filters.format?.jikan, filters.status?.jikan,
+                filters.genre?.malId?.toString(), filters.sort.jikan, filters.sort.direction,
+            )
             AnimePage(response.data.mapNotNull { it.toAnime() }.distinctBy { it.id }, response.pagination.hasNextPage)
         }
     }
@@ -111,7 +117,21 @@ class AnimeRepository @Inject constructor(
 
     fun retryConnection() { failureUntil = 0L }
 
+    fun sourceChanged() {
+        retryConnection()
+        preferAlternateUntil = 0L
+        discoveryCache.clear()
+    }
+
     private suspend fun <T> catalogRequest(backup: suspend () -> T, primary: suspend () -> T): T {
+        when (settings?.preferences?.first()?.source ?: CatalogSource.Automatic) {
+            CatalogSource.Jikan -> return request(primary)
+            CatalogSource.AniList -> {
+                if (alternate == null) throw CatalogException("AniList is unavailable. Choose another source.")
+                return request(backup, 2_100)
+            }
+            CatalogSource.Automatic -> Unit
+        }
         if (alternate == null) return request(primary)
         if (System.currentTimeMillis() < failureUntil) throw lastFailure
         return supervisorScope {
