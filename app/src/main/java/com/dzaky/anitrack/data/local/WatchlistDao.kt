@@ -13,6 +13,9 @@ abstract class WatchlistDao {
     @Query("SELECT * FROM watchlist ORDER BY updatedAt DESC, animeId")
     abstract fun observeAll(): Flow<List<WatchEntry>>
 
+    @Query("SELECT * FROM watchlist ORDER BY updatedAt DESC, animeId")
+    abstract suspend fun snapshot(): List<WatchEntry>
+
     @Query("SELECT * FROM watchlist WHERE animeId = :id")
     abstract fun observe(id: Int): Flow<WatchEntry?>
 

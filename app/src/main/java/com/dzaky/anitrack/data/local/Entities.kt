@@ -5,7 +5,9 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import com.dzaky.anitrack.domain.Anime
 import com.dzaky.anitrack.domain.WatchStatus
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(tableName = "favorites")
 data class FavoriteEntity(
     @PrimaryKey val animeId: Int,
@@ -20,6 +22,7 @@ data class FavoriteEntity(
     fun toAnime() = Anime(animeId, title, posterUrl, score, type, year, episodes)
 }
 
+@Serializable
 @Entity(tableName = "watchlist")
 data class WatchEntry(
     @PrimaryKey val animeId: Int,
@@ -36,6 +39,7 @@ data class WatchEntry(
     fun toAnime() = Anime(animeId, title, posterUrl, score, type, year, totalEpisodes)
 }
 
+@Serializable
 @Entity(tableName = "recently_viewed")
 data class RecentAnimeEntity(
     @PrimaryKey val animeId: Int,
@@ -50,6 +54,7 @@ data class RecentAnimeEntity(
     fun toAnime() = Anime(animeId, title, posterUrl, score, type, year, episodes)
 }
 
+@Serializable
 @Entity(tableName = "search_history")
 data class SearchHistoryEntity(@PrimaryKey val query: String, val searchedAt: Long)
 

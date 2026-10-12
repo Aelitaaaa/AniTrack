@@ -72,6 +72,7 @@ fun AnimeDetailScreen(viewModel: AnimeDetailViewModel, onAnimeClick: (Int) -> Un
                 watchEntry?.let { entry -> item(key = "progress") {
                     WatchProgressPanel(entry, viewModel::setStatus, viewModel::adjustEpisodes, viewModel::setEpisodes, viewModel::removeFromWatchlist)
                 } }
+                item(key = "personal") { PersonalAnimePanel(viewModel) }
                 if (anime.genres.isNotEmpty()) item(key = "genres") { GenreLabels(anime.genres) }
                 anime.synopsis?.let { synopsis -> item(key = "synopsis") { SynopsisSection(anime.id, synopsis) } }
                 item(key = "information") { InformationSection(anime) }

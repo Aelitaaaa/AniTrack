@@ -15,6 +15,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import com.dzaky.anitrack.data.LibraryLayout
+import com.dzaky.anitrack.domain.LibrarySort
+import com.dzaky.anitrack.domain.filterLibrary
+import com.dzaky.anitrack.presentation.components.AnimeCard
+import com.dzaky.anitrack.presentation.components.LibraryToolbar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -47,11 +55,15 @@ import com.dzaky.anitrack.presentation.components.WatchStatusSelector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WatchlistScreen(viewModel: LibraryViewModel, onAnimeClick: (Int) -> Unit, onDiscover: () -> Unit) {
+fun WatchlistScreen(viewModel: LibraryViewModel, onAnimeClick: (Int) -> Unit, onDiscover: () -> Unit, layout: LibraryLayout = LibraryLayout.List) {
     val state by viewModel.watchlist.collectAsStateWithLifecycle()
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
     var editingId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var sortName by rememberSaveable { mutableStateOf(LibrarySort.Recent.name) }
+    val sort = LibrarySort.valueOf(sortName)
     Column(Modifier.fillMaxSize()) {
+        LibraryToolbar(query, { query = it }, sort, { sortName = it.name }, includeProgress = true)
         LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             item { FilterChip(selected = filter == null, onClick = { filter = null }, label = { Text("All") }) }
             items(WatchStatus.entries, key = { it.name }) { status ->
@@ -62,13 +74,26 @@ fun WatchlistScreen(viewModel: LibraryViewModel, onAnimeClick: (Int) -> Unit, on
             LoadState.Loading -> PosterSkeletonRow(Modifier.padding(top = 24.dp))
             is LoadState.Failed -> MessageContent("Couldn't open watchlist", current.message, Modifier.weight(1f), onAction = viewModel::retry)
             is LoadState.Ready -> {
-                val visible = current.value.filter { filter == null || it.status.name == filter }
+                val visible = filterLibrary(current.value.filter { filter == null || it.status.name == filter }, query, sort,
+                    { it.title }, { it.animeId }, { it.score }, { it.updatedAt }, { it.watchedEpisodes })
                 if (visible.isEmpty()) {
                     MessageContent(if (filter == null) "Your next episode starts here" else "Nothing in this list yet",
                         if (filter == null) "Add anime from its detail page, then track each episode as you watch." else "Anime with this status will appear here.",
                         Modifier.weight(1f), actionLabel = "Discover anime", onAction = onDiscover)
+                } else if (layout == LibraryLayout.Grid) {
+                    LazyVerticalGrid(GridCells.Adaptive(136.dp), Modifier.weight(1f), contentPadding = PaddingValues(20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        items(visible, key = { it.animeId }) { entry ->
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                AnimeCard(entry.toAnime(), { onAnimeClick(entry.animeId) }, Modifier.fillMaxWidth())
+                                Text(entry.status.label, style = MaterialTheme.typography.labelSmall)
+                                Text(entry.watchedEpisodes.toString() + " / " + (entry.totalEpisodes?.toString() ?: "?") + " episodes", style = MaterialTheme.typography.bodySmall)
+                                TextButton(onClick = { editingId = entry.animeId }) { Text("Edit progress") }
+                            }
+                        }
+                    }
                 } else {
-                    LazyColumn(contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp)) {
+                    LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp)) {
                         items(visible, key = { it.animeId }) { entry ->
                             WatchlistRow(entry, onOpen = { onAnimeClick(entry.animeId) }, onEdit = { editingId = entry.animeId },
                                 onAdjust = { viewModel.adjustEpisodes(entry.animeId, it) }, onSet = { viewModel.setEpisodes(entry.animeId, it) })

@@ -26,6 +26,19 @@ interface JikanApi {
         @Query("sfw") safeForWork: Boolean = true,
     ): AnimeListResponse
 
+    @GET("anime")
+    suspend fun filteredSearch(
+        @Query("q") query: String,
+        @Query("page") page: Int,
+        @Query("type") format: String? = null,
+        @Query("status") status: String? = null,
+        @Query("genres") genres: String? = null,
+        @Query("order_by") orderBy: String? = null,
+        @Query("sort") sort: String? = null,
+        @Query("sfw") safeForWork: Boolean = true,
+        @Query("limit") limit: Int = 25,
+    ): AnimeListResponse
+
     @GET("anime/{id}/full")
     suspend fun detail(@Path("id") id: Int): AnimeResponse
 
