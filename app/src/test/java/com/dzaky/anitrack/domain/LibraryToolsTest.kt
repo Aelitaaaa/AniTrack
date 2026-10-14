@@ -38,4 +38,17 @@ class LibraryToolsTest {
         assertEquals(0L, stats.episodes)
         assertNull(stats.averageRating)
     }
+
+    @Test fun inactiveTitlesStayInStatisticsWithoutCountingAsWatchingOrCompleted() {
+        val stats = LibraryStatistics.calculate(listOf(
+            StatisticsEntry(4, 12, WatchStatus.OnHold, "TV"),
+            StatisticsEntry(3, null, WatchStatus.Dropped, "TV"),
+        ), emptyList())
+        assertEquals(2, stats.titles)
+        assertEquals(7L, stats.episodes)
+        assertEquals(1, stats.onHold)
+        assertEquals(1, stats.dropped)
+        assertEquals(0, stats.watching)
+        assertEquals(0, stats.completed)
+    }
 }

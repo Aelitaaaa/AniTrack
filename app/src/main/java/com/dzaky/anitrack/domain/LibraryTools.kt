@@ -26,7 +26,8 @@ data class StatisticsEntry(val watched: Int, val total: Int?, val status: WatchS
 
 data class LibraryStatistics(
     val titles: Int = 0, val episodes: Long = 0, val completed: Int = 0,
-    val watching: Int = 0, val planned: Int = 0, val knownTotal: Long = 0,
+    val watching: Int = 0, val planned: Int = 0, val onHold: Int = 0, val dropped: Int = 0,
+    val knownTotal: Long = 0,
     val unknownTotals: Int = 0, val knownWatched: Long = 0, val ratings: Int = 0, val averageRating: Double? = null,
     val formats: List<Pair<String, Int>> = emptyList(),
 ) {
@@ -39,6 +40,8 @@ data class LibraryStatistics(
                 completed = entries.count { it.status == WatchStatus.Completed },
                 watching = entries.count { it.status == WatchStatus.Watching },
                 planned = entries.count { it.status == WatchStatus.Planned },
+                onHold = entries.count { it.status == WatchStatus.OnHold },
+                dropped = entries.count { it.status == WatchStatus.Dropped },
                 knownTotal = entries.sumOf { (it.total ?: 0).coerceAtLeast(0).toLong() },
                 unknownTotals = entries.count { it.total == null || it.total <= 0 },
                 knownWatched = entries.filter { it.total != null && it.total > 0 }

@@ -118,4 +118,25 @@ class AniTrackDatabaseTest {
     }
 
     private fun entry() = WatchEntry(1, "Title", null, null, "TV", 2024, 12, WatchStatus.Planned, 0, 1)
+
+    @Test fun `inactive statuses and progress survive database reopening`() = runBlocking {
+        database.close()
+        val context = RuntimeEnvironment.getApplication()
+        val name = "inactive-status-test.db"
+        context.deleteDatabase(name)
+        try {
+            database = Room.databaseBuilder(context, AniTrackDatabase::class.java, name).build()
+            database.watchlist().save(entry().copy(watchedEpisodes = 5, status = WatchStatus.Watching))
+            for (status in listOf(WatchStatus.OnHold, WatchStatus.Dropped)) {
+                database.watchlist().setStatus(1, status, 2)
+                database.close()
+                database = Room.databaseBuilder(context, AniTrackDatabase::class.java, name).build()
+                assertEquals(status, database.watchlist().get(1)!!.status)
+                assertEquals(5, database.watchlist().get(1)!!.watchedEpisodes)
+            }
+            database.watchlist().adjustEpisodes(1, 1, 3)
+            assertEquals(WatchStatus.Dropped, database.watchlist().get(1)!!.status)
+            assertEquals(6, database.watchlist().get(1)!!.watchedEpisodes)
+        } finally { database.close(); context.deleteDatabase(name) }
+    }
 }

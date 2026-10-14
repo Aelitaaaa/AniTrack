@@ -7,6 +7,8 @@ enum class WatchStatus(val label: String) {
     Planned("Plan to watch"),
     Watching("Watching"),
     Completed("Completed"),
+    OnHold("On hold"),
+    Dropped("Dropped"),
 }
 
 data class WatchProgress(val watched: Int, val status: WatchStatus) {
@@ -25,6 +27,6 @@ data class WatchProgress(val watched: Int, val status: WatchStatus) {
     fun changeStatus(next: WatchStatus, total: Int?): WatchProgress = when (next) {
         WatchStatus.Planned -> WatchProgress(0, next)
         WatchStatus.Completed -> WatchProgress(total?.takeIf { it > 0 } ?: watched, next)
-        WatchStatus.Watching -> WatchProgress(watched, next)
+        WatchStatus.Watching, WatchStatus.OnHold, WatchStatus.Dropped -> WatchProgress(watched, next)
     }
 }

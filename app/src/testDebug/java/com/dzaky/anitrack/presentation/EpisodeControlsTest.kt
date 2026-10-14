@@ -2,6 +2,10 @@ package com.dzaky.anitrack.presentation
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -10,6 +14,7 @@ import androidx.compose.ui.test.performTextReplacement
 import com.dzaky.anitrack.data.local.WatchEntry
 import com.dzaky.anitrack.domain.WatchStatus
 import com.dzaky.anitrack.presentation.components.EpisodeControls
+import com.dzaky.anitrack.presentation.components.WatchStatusSelector
 import com.dzaky.anitrack.presentation.theme.AniTrackTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -45,4 +50,14 @@ class EpisodeControlsTest {
     }
 
     private fun entry(watched: Int) = WatchEntry(1, "Title", null, null, null, null, 12, WatchStatus.Watching, watched, 1)
+
+    @Test fun `watch selector exposes and selects both inactive states`() {
+        var selected by mutableStateOf(WatchStatus.Watching)
+        compose.setContent { AniTrackTheme { WatchStatusSelector(selected, { selected = it }) } }
+        compose.onNodeWithText("On hold").performClick()
+        compose.onNodeWithText("On hold").assertIsSelected()
+        compose.onNodeWithText("Dropped").performClick()
+        compose.onNodeWithText("Dropped").assertIsSelected()
+        assertEquals(WatchStatus.Dropped, selected)
+    }
 }

@@ -52,6 +52,8 @@ fun StatisticsScreen(viewModel: StatisticsViewModel, onAnimeClick: (Int) -> Unit
                         StatisticsBar("Completed", s.completed, s.titles)
                         StatisticsBar("Watching", s.watching, s.titles)
                         StatisticsBar("Plan to watch", s.planned, s.titles)
+                        StatisticsBar("On hold", s.onHold, s.titles)
+                        StatisticsBar("Dropped", s.dropped, s.titles)
                         if (s.knownTotal > 0) {
                             Text(s.knownWatched.toString() + " / " + s.knownTotal + " episodes with a known total")
                             LinearProgressIndicator(progress = { (s.knownWatched.toFloat() / s.knownTotal).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
